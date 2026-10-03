@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { PlanCanvas, type Tool, type CanvasHandle } from "@/components/plan/PlanCanvas";
 import { PlanSvg, type Sel } from "@/components/plan/PlanLayers";
+import { Plan3DViewer } from "@/components/plan/Plan3DViewer";
 import { SketchPanel } from "@/components/panels/SketchPanel";
 import { MeasurePanel } from "@/components/panels/MeasurePanel";
 import { FixedPanel } from "@/components/panels/FixedPanel";
@@ -14,6 +15,7 @@ import type { FixedKind, Project, ProjectData, Step } from "@/lib/types";
 import { emptyData } from "@/lib/types";
 import { loadProject, saveProject, createProject, isLocalId } from "@/lib/store";
 import { ROOM_TYPES } from "@/lib/catalog";
+import { Compass, Layout, Box, Columns } from "lucide-react";
 
 export default function Home() {
   const [projectId, setProjectId] = useState<string>("");
@@ -25,6 +27,7 @@ export default function Home() {
   const [sel, setSel] = useState<Sel>(null);
   const [placeKind, setPlaceKind] = useState<FixedKind | null>(null);
   const [focusSeg, setFocusSeg] = useState<{ shapeId: string; seg: number } | null>(null);
+  const [viewMode, setViewMode] = useState<"2d" | "3d" | "split">("2d");
 
   // Modales
   const [projectsOpen, setProjectsOpen] = useState(false);
@@ -139,6 +142,7 @@ export default function Home() {
 
   const activeProposal = data.proposals.find((p) => p.id === data.activeProposalId) || data.proposals[0];
   const activeFurniture = activeProposal?.items || [];
+  const hasShapes = data.shapes.length > 0;
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-50 select-none">
@@ -164,30 +168,101 @@ export default function Home() {
         onOpenProjects={() => setProjectsOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         isCloudSaved={!isLocalId(projectId)}
-        hasShapes={data.shapes.length > 0}
+        hasShapes={hasShapes}
       />
 
       {/* Área principal: Lienzo interactivo + Panel lateral */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Lienzo SVG interactivo */}
-        <main className="flex-1 relative h-full">
-          <PlanCanvas
-            ref={canvasRef}
-            data={data}
-            step={step}
-            tool={tool}
-            setTool={setTool}
-            sel={sel}
-            setSel={setSel}
-            update={update}
-            beginChange={beginChange}
-            placeKind={placeKind}
-            furniture={activeFurniture}
-            focusSeg={focusSeg}
-            onSegmentClick={(shapeId, seg) => {
-              setFocusSeg({ shapeId, seg });
-            }}
-          />
+        {/* Espacio de trabajo (2D, 3D o Dividido) */}
+        <main className="flex-1 relative h-full flex overflow-hidden">
+          {/* Vista 2D */}
+          <div
+            className={`relative h-full transition-all duration-300 ${
+              viewMode === "2d" ? "w-full" : viewMode === "split" ? "w-1/2 border-r border-slate-200" : "hidden"
+            }`}
+          >
+            <PlanCanvas
+              ref={canvasRef}
+              data={data}
+              step={step}
+              tool={tool}
+              setTool={setTool}
+              sel={sel}
+              setSel={setSel}
+              update={update}
+              beginChange={beginChange}
+              placeKind={placeKind}
+              furniture={activeFurniture}
+              focusSeg={focusSeg}
+              onSegmentClick={(shapeId, seg) => {
+                setFocusSeg({ shapeId, seg });
+              }}
+            />
+          </div>
+
+          {/* Vista 3D 360° interactiva */}
+          <div
+            className={`relative h-full transition-all duration-300 ${
+              viewMode === "3d" ? "w-full" : viewMode === "split" ? "w-1/2" : "hidden"
+            }`}
+          >
+            {hasShapes ? (
+              <Plan3DViewer
+                data={data}
+                furniture={activeFurniture}
+                selectedId={sel?.id}
+              />
+            ) : (
+              <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-slate-400 p-6 text-center text-xs space-y-2">
+                <Box className="w-10 h-10 text-slate-600" />
+                <p>Dibuja primero las paredes de tu habitación en el paso 1 para ver la vista 3D.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Selector flotante de vista (2D / 3D 360° / Dividida) */}
+          {hasShapes && (
+            <div className="absolute top-4 left-4 z-20 flex items-center bg-white/90 backdrop-blur-md p-1 rounded-xl shadow-lg border border-slate-200/80">
+              <button
+                type="button"
+                onClick={() => setViewMode("2d")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  viewMode === "2d"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <Layout className="w-3.5 h-3.5" />
+                <span>2D Plano</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode("3d")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  viewMode === "3d"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <Compass className="w-3.5 h-3.5 text-amber-500" />
+                <span>3D 360°</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode("split")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition hidden sm:flex ${
+                  viewMode === "split"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <Columns className="w-3.5 h-3.5" />
+                <span>Dividida (2D + 3D)</span>
+              </button>
+            </div>
+          )}
         </main>
 
         {/* Panel lateral derecho del paso activo */}
