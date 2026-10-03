@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CroquisIA · De boceto a plano 2D, ideas con IA y renders 3D",
+  title: "ROOMIA · De boceto a plano 2D, ideas con IA y renders 3D",
   description:
-    "Dibuja el croquis de tu habitación, añade medidas reales, elementos fijos y genera propuestas de distribución de interiores, renders fotorrealistas y lista de productos de compra.",
+    "Dibuja el boceto de tu habitación, añade medidas reales, elementos fijos y genera propuestas de distribución de interiores con IA, renders fotorrealistas y lista de compra de productos.",
 };
 
 export default function RootLayout({

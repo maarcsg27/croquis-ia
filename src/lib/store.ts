@@ -5,8 +5,8 @@ import { emptyData, type Project, type ProjectData } from "./types";
  * Capa de almacenamiento del cliente.
  * Usa la base de datos (API) y, si no está configurada, cae a localStorage.
  */
-const IDS_KEY = "croquis:ids";
-const LOCAL_KEY = (id: string) => `croquis:project:${id}`;
+const IDS_KEY = "roomia:ids";
+const LOCAL_KEY = (id: string) => `roomia:project:${id}`;
 
 export const isLocalId = (id: string) => id.startsWith("local-");
 

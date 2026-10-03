@@ -40,7 +40,7 @@ export default function Home() {
   // Carga inicial o nuevo proyecto
   useEffect(() => {
     (async () => {
-      const id = await createProject("Mi primer croquis", ROOM_TYPES[0]);
+      const id = await createProject("Mi primer proyecto", ROOM_TYPES[0]);
       setProjectId(id);
       const p = await loadProject(id);
       if (p) {

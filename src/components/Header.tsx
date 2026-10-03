@@ -76,7 +76,7 @@ export function Header({
             📐
           </div>
           <span className="font-extrabold text-slate-800 text-base tracking-tight hidden sm:inline">
-            Croquis<span className="text-indigo-600">IA</span>
+            ROOM<span className="text-indigo-600">IA</span>
           </span>
         </div>
 
