@@ -13,9 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ROOMIA · De boceto a plano 2D, ideas con IA y renders 3D",
+  title: "ROOMIA · Tu habitación, a tu manera",
   description:
-    "Dibuja el boceto de tu habitación, añade medidas reales, elementos fijos y genera propuestas de distribución de interiores con IA, renders fotorrealistas y lista de compra de productos.",
+    "Genera ideas de decoración y distribución en cada habitación de casa. Dibuja el plano de tu espacio, añade elementos fijos y obtén propuestas de interiorismo con IA, renders 3D fotorrealistas y lista de productos de compra.",
+  openGraph: {
+    title: "ROOMIA · Tu habitación, a tu manera",
+    description:
+      "Genera ideas de decoración y distribución en cada habitación de casa con IA.",
+    siteName: "ROOMIA",
+    locale: "es_ES",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

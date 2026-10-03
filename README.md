@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ROOMIA · Tu habitación, a tu manera
 
-## Getting Started
+> **Genera ideas de decoración y distribución en cada habitación de casa.**
 
-First, run the development server:
+ROOMIA es una aplicación web interactiva que te permite dibujar el croquis o plano de cualquier estancia de tu hogar, introducir medidas reales y elementos fijos de obra, y obtener al instante propuestas de interiorismo optimizadas con Inteligencia Artificial, renders 3D fotorrealistas y recomendaciones de productos reales para comprar.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🚀 Flujo de Trabajo
+
+1. **📐 1. Croquis / Boceto:**
+   Dibuja sobre una cuadrícula profesional e intuitiva la forma de tu habitación (líneas rectas, rectángulos o curvas Bézier).
+
+2. **📏 2. Medidas Reales:**
+   Añade las cotas exactas de tus paredes. El motor de escala ajusta automáticamente las proporciones y la geometría.
+
+3. **🚪 3. Elementos Fijos y Obra:**
+   Coloca puertas (simples, dobles, correderas), ventanas, balconeras, radiadores, chimeneas, armarios empotrados, columnas, tomas de corriente y puntos de TV.
+
+4. **✨ 4. Distribución e Ideas con IA:**
+   Describe lo que necesitas (sofá, mesa de comedor, almacenaje...) y selecciona tu estilo favorito (Nórdico, Japandi, Moderno, Minimalista...). La IA genera:
+   - Distribuciones en plano 2D a escala con paleta cromática.
+   - **Renders 3D fotorrealistas** en perspectiva o vista aérea isométrica.
+   - Refinamiento continuo con tus comentarios y sugerencias.
+
+5. **🛍️ 5. Personal Shopper de Productos:**
+   Encuentra muebles y artículos reales parecidos en tiendas online (IKEA, Maisons du Monde, Kave Home, Leroy Merlin, Amazon...) con enlace directo de compra y precio orientativo.
+
+---
+
+## 🛠️ Tecnologías
+
+- **Framework:** Next.js 16 (App Router, Turbopack, TypeScript)
+- **Estilos:** Tailwind CSS v4 & Lucide Icons
+- **Inteligencia Artificial:** Google Gemini API (`gemini-3.8-flash`, `gemini-3.1-flash-image`, Google Search Grounding)
+- **Base de Datos:** Neon Postgres / Vercel Postgres (`@neondatabase/serverless`) + soporte offline con LocalStorage
+- **Despliegue:** Vercel (CI/CD automático desde GitHub)
+
+---
+
+## 📦 Variables de Entorno
+
+Configura en tu archivo `.env.local` o en Vercel (*Settings* → *Environment Variables*):
+
+```env
+# Clave gratuita de Google Gemini (https://aistudio.google.com/app/apikey)
+GEMINI_API_KEY=tu_gemini_api_key_aqui
+
+# Base de datos Postgres (Opcional, activa persistencia en nube)
+DATABASE_URL=postgresql://usuario:password@ep-ejemplo.neon.tech/neondb?sslmode=require
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 💻 Desarrollo Local
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
