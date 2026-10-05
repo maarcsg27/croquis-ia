@@ -611,25 +611,14 @@ export function Plan3DViewer({ data, furniture = [], selectedId, onClose }: Prop
       <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
 
       {/* Barra de herramientas flotante superior */}
-      <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none z-10">
-        <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 shadow-lg pointer-events-auto">
-          <span className="flex items-center gap-1.5 text-xs font-bold text-white">
-            <Compass className="w-4 h-4 text-indigo-400 animate-spin-slow" />
-            <span>Vista 3D Interactiva 360°</span>
-          </span>
-          <div className="h-4 w-px bg-white/20 mx-1" />
-          <span className="text-[11px] text-slate-300 hidden sm:inline">
-            Arrastra para rotar en 360° · Rueda para zoom
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-lg pointer-events-auto">
+      <div className="absolute top-14 sm:top-4 right-3 sm:right-4 flex flex-wrap items-center justify-end gap-2 pointer-events-none z-10">
+        <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-900/85 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-lg pointer-events-auto">
           {/* Modos de cámara */}
           <button
             type="button"
             onClick={() => setCameraMode("orbit")}
             title="Vista Exterior 360° (Dollhouse)"
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+            className={`px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
               cameraMode === "orbit"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -643,7 +632,7 @@ export function Plan3DViewer({ data, furniture = [], selectedId, onClose }: Prop
             type="button"
             onClick={() => setCameraMode("inside")}
             title="Vista Interior 360° (Dentro de la habitación)"
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+            className={`px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
               cameraMode === "inside"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -657,7 +646,7 @@ export function Plan3DViewer({ data, furniture = [], selectedId, onClose }: Prop
             type="button"
             onClick={() => setCameraMode("top")}
             title="Vista Cenital (Plano 3D)"
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+            className={`px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
               cameraMode === "top"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -674,13 +663,13 @@ export function Plan3DViewer({ data, furniture = [], selectedId, onClose }: Prop
             type="button"
             onClick={() => setWallCut((c) => !c)}
             title="Paredes bajas / Maqueta seccionada"
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
+            className={`px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
               wallCut
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-300 hover:text-white hover:bg-white/10"
             }`}
           >
-            Paredes {wallCut ? "Bajas" : "Completas"}
+            <span className="hidden xs:inline">Paredes </span>{wallCut ? "Bajas" : "Altas"}
           </button>
 
           {/* Captura */}
@@ -696,16 +685,13 @@ export function Plan3DViewer({ data, furniture = [], selectedId, onClose }: Prop
       </div>
 
       {/* Indicador de ayuda en la esquina inferior izquierda */}
-      <div className="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 text-white text-[11px] space-y-0.5 pointer-events-none shadow-lg hidden sm:block">
+      <div className="absolute bottom-16 sm:bottom-4 left-3 sm:left-4 bg-slate-900/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 text-white text-[11px] space-y-0.5 pointer-events-none shadow-lg hidden sm:block">
         <div className="font-semibold text-indigo-400">Controles 360°:</div>
         <div className="text-slate-300">
-          • <b>Clic izquierdo + arrastrar:</b> Rotar 360° en cualquier ángulo
+          • <b>1 dedo / Clic:</b> Rotar 360° en cualquier ángulo
         </div>
         <div className="text-slate-300">
-          • <b>Clic derecho + arrastrar:</b> Desplazar cámara (Pan)
-        </div>
-        <div className="text-slate-300">
-          • <b>Rueda del ratón:</b> Acercar / Alejar zoom
+          • <b>2 dedos / Rueda:</b> Acercar / Alejar y mover cámara
         </div>
       </div>
     </div>

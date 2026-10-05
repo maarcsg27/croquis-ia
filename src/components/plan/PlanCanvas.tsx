@@ -134,12 +134,80 @@ export const PlanCanvas = forwardRef<CanvasHandle, Props>(function PlanCanvas(pr
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const r = el.getBoundingClientRect();
-      if (e.ctrlKey || Math.abs(e.deltaY) > 0 && !e.shiftKey && Math.abs(e.deltaX) < 1)
+      if (e.ctrlKey || (Math.abs(e.deltaY) > 0 && !e.shiftKey && Math.abs(e.deltaX) < 1))
         zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top);
       else setView((v) => ({ ...v, x: v.x - e.deltaX, y: v.y - e.deltaY }));
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
+  }, [zoomAt]);
+
+  // Soporte multitáctil nativo (Pinch-to-zoom y Pan con 2 dedos en móviles/tablets)
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+
+    let lastDist = 0;
+    let lastCenter = { x: 0, y: 0 };
+    let isPinching = false;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length >= 2) {
+        isPinching = true;
+        setDrag(null);
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        lastDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        lastCenter = {
+          x: (t1.clientX + t2.clientX) / 2,
+          y: (t1.clientY + t2.clientY) / 2,
+        };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length >= 2 && isPinching) {
+        e.preventDefault();
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const newDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        const newCenter = {
+          x: (t1.clientX + t2.clientX) / 2,
+          y: (t1.clientY + t2.clientY) / 2,
+        };
+        const r = el.getBoundingClientRect();
+
+        if (lastDist > 10 && newDist > 10) {
+          const factor = newDist / lastDist;
+          zoomAt(factor, newCenter.x - r.left, newCenter.y - r.top);
+        }
+
+        const dx = newCenter.x - lastCenter.x;
+        const dy = newCenter.y - lastCenter.y;
+        setView((v) => ({ ...v, x: v.x + dx, y: v.y + dy }));
+
+        lastDist = newDist;
+        lastCenter = newCenter;
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        lastDist = 0;
+        if (e.touches.length === 0) {
+          isPinching = false;
+        }
+      }
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
   }, [zoomAt]);
 
   /* ---------- teclado ---------- */
@@ -279,7 +347,7 @@ export const PlanCanvas = forwardRef<CanvasHandle, Props>(function PlanCanvas(pr
   };
 
   const hitVertex = (p: Pt) => {
-    const tol = 9 / k;
+    const tol = Math.max(10, 16 / k);
     for (const s of data.shapes)
       for (let i = 0; i < s.points.length; i++) if (dist(s.points[i], p) < tol) return { shapeId: s.id, index: i };
     return null;
@@ -289,7 +357,7 @@ export const PlanCanvas = forwardRef<CanvasHandle, Props>(function PlanCanvas(pr
 
   const hitBend = (p: Pt) => {
     if (!selectedShape) return null;
-    const tol = 9 / k;
+    const tol = Math.max(10, 16 / k);
     for (let i = 0; i < segCount(selectedShape); i++)
       if (dist(segPointAt(selectedShape, i, 0.5), p) < tol) return i;
     return null;
