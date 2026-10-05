@@ -92,6 +92,10 @@ export type Proposal = {
   tips: string[];
   renders: string[]; // URLs (o data URLs) de renders
   feedbackHistory: string[];
+  spaceOptimizationRationale?: string;
+  energyEfficiencyTips?: string[];
+  sustainabilityScore?: number; // 1..10
+  bioclimaticNotes?: string;
 };
 
 export type Product = {

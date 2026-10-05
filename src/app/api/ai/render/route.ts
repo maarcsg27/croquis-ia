@@ -1,6 +1,7 @@
 import { db, hasDb, isUuid } from "@/lib/db";
 import { aiError, generateImage, hasAi, noAiResponse } from "@/lib/gemini";
 import type { Proposal } from "@/lib/types";
+import { STYLES_ENCYCLOPEDIA } from "@/lib/knowledge";
 
 export const maxDuration = 120;
 export const dynamic = "force-dynamic";
@@ -19,24 +20,41 @@ export async function POST(req: Request) {
     };
     const p = body.proposal;
     const items = p.items
-      .map((i) => `- ${i.name} (${Math.round(i.w)}×${Math.round(i.d)} cm${i.material ? ", " + i.material : ""}${i.color ? ", color " + i.color : ""})`)
+      .map(
+        (i) =>
+          `- ${i.name} (${Math.round(i.w)}×${Math.round(i.d)} cm${i.material ? ", material: " + i.material : ""}${
+            i.color ? ", color: " + i.color : ""
+          })`
+      )
       .join("\n");
     const viewText =
       body.view === "aerial"
-        ? "Vista aérea 3D isométrica (dollhouse) desde arriba en ángulo de 45°, sin techo, mostrando toda la estancia."
-        : "Fotografía de interiores a la altura de los ojos (1,60 m), en perspectiva desde la esquina que mejor muestre la distribución, objetivo gran angular 24 mm.";
+        ? "Vista aérea 3D isométrica (dollhouse) en ángulo de 45°, sin techo, mostrando toda la distribución arquitectónica."
+        : "Fotografía de interiores a la altura de los ojos (1,50 m), en perspectiva fotográfica angular (24mm focal), profundidad de campo cinematográfica.";
 
-    const prompt = `Genera un RENDER FOTORREALISTA de interiorismo de un/a ${body.roomType}.
-La imagen adjunta es el PLANO EN PLANTA a escala de la estancia (vista desde arriba): las paredes son las líneas gruesas grises, las puertas se dibujan con un arco de apertura, las ventanas en azul claro, los elementos fijos en gris y los muebles como rectángulos de color con su nombre.
-Respeta FIELMENTE la forma de la estancia, la posición de puertas, ventanas y elementos fijos, y la ubicación, orientación y proporción de cada mueble del plano.
+    // Obtener detalles del estilo desde la biblioteca de conocimiento
+    const styleDossier =
+      STYLES_ENCYCLOPEDIA[p.style] ||
+      Object.values(STYLES_ENCYCLOPEDIA).find((s) => s.aliases.some((a) => a.toLowerCase().includes(p.style.toLowerCase())));
+
+    const styleDetails = styleDossier
+      ? `Materiales auténticos recomendados: ${styleDossier.materials.woods.join(", ")}, ${styleDossier.materials.textiles.join(
+          ", "
+        )}, ${styleDossier.materials.minerals.join(", ")}. Estrategia lumínica: ${styleDossier.lightingStrategy}.`
+      : "";
+
+    const prompt = `Genera un RENDER FOTORREALISTA de arquitectura de interiores de un/a ${body.roomType}.
+La imagen adjunta es el PLANO EN PLANTA a escala exacta (vista cenital): las paredes son las líneas gruesas, las puertas tienen su arco de apertura, las ventanas están en azul claro y los muebles se indican en sus posiciones y dimensiones reales.
+Respeta RIGUROSAMENTE la forma perimetral de la estancia, la posición de puertas, ventanas y elementos fijos, y la ubicación, orientación y escala de cada mueble del plano.
 ${viewText}
-Altura de techo: ${body.wallHeight} cm.
-Estilo: ${p.style}. ${p.summary}
-Paleta de colores: ${p.palette.join(", ")}.
-Mobiliario:
+Altura libre de techo: ${body.wallHeight} cm.
+Estilo decorativo: ${p.style}. ${p.summary}
+${styleDetails}
+Paleta cromática armónica: ${p.palette.join(", ")}.
+Mobiliario a representar fielmente:
 ${items}
-${body.extra ? "Indicaciones extra del usuario: " + body.extra : ""}
-Iluminación natural entrando por las ventanas, materiales realistas, calidad de revista de decoración. No incluyas textos, etiquetas, cotas ni marcas de agua en la imagen.`;
+${body.extra ? "Instrucciones de diseño adicionales: " + body.extra : ""}
+Iluminación bioclimática natural entrando suavemente por las ventanas (luz de día suave, sombras sutiles), complementada con iluminación cálida indirecta en 2700K. Acabados y texturas hiperrealistas (grano de madera natural, textura táctil de lino y bouclé, reflejos de piedra natural mate). Calidad de portada de Architectural Digest. No incluyas textos, cotas, marcas de agua ni personas.`;
 
     const img = await generateImage({
       prompt,

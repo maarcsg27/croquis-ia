@@ -36,6 +36,15 @@ export async function db() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )`;
       await q`CREATE INDEX IF NOT EXISTS renders_project_idx ON renders(project_id)`;
+      await q`CREATE TABLE IF NOT EXISTS knowledge_base (
+        id TEXT PRIMARY KEY,
+        domain TEXT NOT NULL,
+        title TEXT NOT NULL,
+        content JSONB NOT NULL,
+        tags TEXT[] NOT NULL DEFAULT '{}',
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )`;
+      await q`CREATE INDEX IF NOT EXISTS knowledge_domain_idx ON knowledge_base(domain)`;
     })().catch((e) => {
       schemaReady = null;
       throw e;

@@ -94,6 +94,22 @@ export function SettingsModal({ isOpen, onClose }: Props) {
               o Vercel Storage.
             </div>
           </div>
+
+          {/* Bibliotecas de Inteligencia de Interiorismo y Eficiencia */}
+          <div className="p-3 rounded-xl border border-emerald-200/80 bg-emerald-50/50 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold text-emerald-950">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Bibliotecas de Interiorismo y Sostenibilidad</span>
+              </div>
+              <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                Activas
+              </span>
+            </div>
+            <p className="text-[11px] text-emerald-900 leading-relaxed">
+              Google Gemini consulta automáticamente las bibliotecas canónicas de <b>ergonomía Neufert</b>, <b>confort bioclimático</b>, <b>optimización de habitáculos</b> y la <b>enciclopedia de estilos</b> en cada propuesta y render.
+            </p>
+          </div>
         </div>
 
         <div className="pt-2">

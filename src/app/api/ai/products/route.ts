@@ -17,7 +17,7 @@ const schema = {
           store: { type: "string" },
           price: { type: "string", description: "Precio aproximado, p.ej. '349 €'" },
           url: { type: "string", description: "Enlace directo a la ficha del producto" },
-          description: { type: "string" },
+          description: { type: "string", description: "Breve descripción con foco en materiales sostenibles, ergonomía o calidad" },
           dimensions: { type: "string" },
         },
         required: ["item", "name", "store", "url"],
@@ -34,17 +34,24 @@ export async function POST(req: Request) {
     const p = body.proposal;
     const list = p.items
       .filter((i) => i.category !== "plant" || p.items.length < 12)
-      .map((i) => `- ${i.name}: ${Math.round(i.w)}×${Math.round(i.d)} cm, ${i.material || ""} ${i.color || ""} (${i.category})`)
+      .map(
+        (i) =>
+          `- ${i.name}: ${Math.round(i.w)}×${Math.round(i.d)} cm, material sugerido: ${i.material || "no especificado"}, color: ${
+            i.color || ""
+          } (${i.category})`
+      )
       .join("\n");
     const res = await generateJson<{ products: Product[] }>({
       system:
-        "Eres un personal shopper de decoración. Usa la búsqueda de Google para encontrar productos REALES que estén a la venta actualmente. Nunca inventes enlaces: usa solo URLs que hayas encontrado en los resultados de búsqueda.",
-      input: `Busca productos parecidos (estilo, color y medidas similares) para cada elemento de esta propuesta de interiorismo, a la venta online en ${body.country || "España"} (tiendas como IKEA, Leroy Merlin, Kave Home, Maisons du Monde, Zara Home, El Corte Inglés, Amazon.es, Sklum, MediaMarkt o PcComponentes para electrónica).
-Estilo: ${p.style}. Presupuesto total: ${body.budget || "no indicado"}.
+        "Eres un personal shopper de arquitectura de interiores y diseño sostenible. Usa la búsqueda de Google para encontrar productos REALES y vigentes a la venta. Prioriza piezas con maderas certificadas sostenibles (FSC/PEFC), textiles naturales reciclables, iluminación LED de alta eficiencia y medidas ergonómicas exactas. Nunca inventes enlaces: usa solo URLs reales encontradas en la búsqueda.",
+      input: `Busca productos parecidos en estilo, color, materiales y medidas para cada elemento de esta propuesta de interiorismo, a la venta online en ${
+        body.country || "España"
+      } (tiendas como IKEA, Leroy Merlin, Kave Home, Maisons du Monde, Zara Home, El Corte Inglés, Amazon.es, Sklum, Hannun, La Redoute o MediaMarkt/PcComponentes para electrónica/iluminación).
+Estilo: ${p.style}. Presupuesto total orientativo: ${body.budget || "no indicado"}.
 Elementos:
 ${list}
 
-Devuelve 1 o 2 productos por elemento con nombre, tienda, precio aproximado, enlace directo, breve descripción y medidas.`,
+Devuelve 1 o 2 productos reales por elemento con nombre comercial, tienda, precio aproximado, enlace directo, descripción y medidas comprobadas.`,
       schema,
       tools: [{ type: "google_search" }],
     });

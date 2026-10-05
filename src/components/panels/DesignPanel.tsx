@@ -20,11 +20,16 @@ import {
   LayoutGrid,
   Info,
   Maximize2,
+  Leaf,
+  Zap,
+  BookOpen,
+  Compass,
 } from "lucide-react";
 import { STYLES, SUGGESTION_CHIPS, FURNITURE_CATEGORIES } from "@/lib/catalog";
 import type { FurnitureItem, ProjectData, Proposal } from "@/lib/types";
 import { uid } from "@/lib/geometry";
 import type { Sel } from "../plan/PlanLayers";
+import { KnowledgeModal } from "../KnowledgeModal";
 
 type Props = {
   data: ProjectData;
@@ -58,6 +63,7 @@ export function DesignPanel({
   const [renderView, setRenderView] = useState<"perspective" | "aerial">("perspective");
   const [proposalCount, setProposalCount] = useState<number>(3);
   const [selectedRenderUrl, setSelectedRenderUrl] = useState<string | null>(null);
+  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
 
   const activeProposal = data.proposals.find((p) => p.id === data.activeProposalId) || data.proposals[0];
   const selectedFurniture = sel?.type === "furn" ? activeProposal?.items.find((i) => i.id === sel.id) : null;
@@ -209,6 +215,21 @@ export function DesignPanel({
         </p>
       </div>
 
+      {/* Botón de acceso a la Base de Conocimiento */}
+      <button
+        type="button"
+        onClick={() => setKnowledgeOpen(true)}
+        className="w-full flex items-center justify-between p-2.5 bg-gradient-to-r from-indigo-50/90 via-violet-50/80 to-emerald-50/70 hover:from-indigo-100 hover:to-emerald-100 border border-indigo-200/80 rounded-xl text-xs text-indigo-950 font-bold transition shadow-2xs group"
+      >
+        <div className="flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-indigo-600 shrink-0 group-hover:scale-110 transition" />
+          <span>Base de Conocimiento de Interiorismo & Eficiencia</span>
+        </div>
+        <span className="text-[10px] text-indigo-600 bg-white px-2 py-0.5 rounded-full border border-indigo-200 font-bold shadow-2xs">
+          Ver Guía
+        </span>
+      </button>
+
       {/* Formulario de configuración del diseño */}
       <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-3 text-xs">
         {/* Deseos del usuario */}
@@ -354,12 +375,51 @@ export function DesignPanel({
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <h4 className="font-extrabold text-slate-800 text-sm leading-tight">{activeProposal.title}</h4>
-                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 font-bold rounded-full text-[10px] shrink-0">
-                    {activeProposal.style}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 font-bold rounded-full text-[10px]">
+                      {activeProposal.style}
+                    </span>
+                    {activeProposal.sustainabilityScore && (
+                      <span
+                        title="Puntuación de sostenibilidad basada en materiales naturales y diseño bioclimático"
+                        className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded-full text-[10px] flex items-center gap-1"
+                      >
+                        <Leaf className="w-3 h-3 text-emerald-600" />
+                        <span>{activeProposal.sustainabilityScore}/10</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p className="text-slate-600 text-xs mt-1.5 leading-relaxed">{activeProposal.summary}</p>
               </div>
+
+              {/* Optimización del Espacio (Ergonomía Neufert & Circulaciones) */}
+              {activeProposal.spaceOptimizationRationale && (
+                <div className="bg-indigo-50/80 border border-indigo-200/80 rounded-xl p-2.5 space-y-1">
+                  <span className="font-bold text-indigo-950 flex items-center gap-1.5 text-[11px]">
+                    <Compass className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                    <span>Optimización del Espacio y Circulaciones:</span>
+                  </span>
+                  <p className="text-[11px] text-indigo-900 leading-relaxed">
+                    {activeProposal.spaceOptimizationRationale}
+                  </p>
+                </div>
+              )}
+
+              {/* Eficiencia Energética y Confort Bioclimático */}
+              {activeProposal.energyEfficiencyTips && activeProposal.energyEfficiencyTips.length > 0 && (
+                <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl p-2.5 space-y-1">
+                  <span className="font-bold text-emerald-950 flex items-center gap-1.5 text-[11px]">
+                    <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span>Eficiencia Energética y Ahorro Térmico:</span>
+                  </span>
+                  <ul className="list-disc list-inside text-[11px] text-emerald-900 space-y-0.5 leading-relaxed">
+                    {activeProposal.energyEfficiencyTips.map((tip, i) => (
+                      <li key={i}>{tip}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Paleta de colores */}
               {activeProposal.palette?.length > 0 && (
@@ -636,6 +696,13 @@ export function DesignPanel({
           <span>Elegir y Buscar Productos</span>
         </button>
       </div>
+
+      {/* Modal de Base de Conocimiento de Interiorismo y Sostenibilidad */}
+      <KnowledgeModal
+        isOpen={knowledgeOpen}
+        onClose={() => setKnowledgeOpen(false)}
+        activeStyle={data.style}
+      />
     </div>
   );
 }
