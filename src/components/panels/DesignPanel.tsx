@@ -15,6 +15,11 @@ import {
   Download,
   Palette,
   Lightbulb,
+  ListFilter,
+  Check,
+  LayoutGrid,
+  Info,
+  Maximize2,
 } from "lucide-react";
 import { STYLES, SUGGESTION_CHIPS, FURNITURE_CATEGORIES } from "@/lib/catalog";
 import type { FurnitureItem, ProjectData, Proposal } from "@/lib/types";
@@ -51,7 +56,7 @@ export function DesignPanel({
   const [loadingRefine, setLoadingRefine] = useState(false);
   const [refineText, setRefineText] = useState("");
   const [renderView, setRenderView] = useState<"perspective" | "aerial">("perspective");
-  const [activeTab, setActiveTab] = useState<"proposals" | "custom" | "renders">("proposals");
+  const [proposalCount, setProposalCount] = useState<number>(3);
   const [selectedRenderUrl, setSelectedRenderUrl] = useState<string | null>(null);
 
   const activeProposal = data.proposals.find((p) => p.id === data.activeProposalId) || data.proposals[0];
@@ -78,7 +83,7 @@ export function DesignPanel({
           brief: data.brief,
           style: data.style,
           budget: data.budget,
-          count: 3,
+          count: proposalCount,
         }),
       });
       const json = await res.json();
@@ -172,29 +177,6 @@ export function DesignPanel({
   };
 
   /* ---------------- Muebles manuales ---------------- */
-  const addManualFurniture = (cat: (typeof FURNITURE_CATEGORIES)[number]) => {
-    if (!activeProposal) return;
-    const item: FurnitureItem = {
-      id: uid(),
-      name: cat === "sofa" ? "Sofá 3 plazas" : cat === "table" ? "Mesa" : cat === "bed" ? "Cama" : "Nuevo mueble",
-      category: cat,
-      x: 250,
-      y: 200,
-      w: cat === "sofa" ? 210 : cat === "bed" ? 160 : 100,
-      d: cat === "sofa" ? 90 : cat === "bed" ? 200 : 80,
-      rot: 0,
-      color: activeProposal.palette?.[0] || "#64748b",
-    };
-    beginChange();
-    update((d) => ({
-      ...d,
-      proposals: d.proposals.map((p) =>
-        p.id === activeProposal.id ? { ...p, items: [...p.items, item] } : p
-      ),
-    }));
-    setSel({ type: "furn", id: item.id });
-  };
-
   const deleteFurniture = (id: string) => {
     if (!activeProposal) return;
     beginChange();
@@ -223,35 +205,36 @@ export function DesignPanel({
       <div>
         <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-600 mb-1">Paso 4 · Ideas y Distribución</h3>
         <p className="text-xs text-slate-500 leading-relaxed">
-          Indica tus preferencias y la IA generará propuestas de distribución en plano 2D y renders fotorrealistas.
+          Diseño de interiores profesional: define tus necesidades, estilo y presupuesto para recibir propuestas de distribución y renders 3D.
         </p>
       </div>
 
-      {/* Formulario de deseos del usuario */}
-      <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 space-y-3 text-xs">
+      {/* Formulario de configuración del diseño */}
+      <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-3 text-xs">
+        {/* Deseos del usuario */}
         <div>
-          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
-            ¿Qué quieres añadir en este espacio?
+          <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide block mb-1">
+            ¿Qué elementos quieres añadir en esta habitación?
           </label>
           <textarea
             rows={3}
             value={data.brief}
             onChange={(e) => update((d) => ({ ...d, brief: e.target.value }))}
-            placeholder="Ej: Sofá cómodo de 3 plazas, mesa de comedor extensible para 6, zona de TV y mueble de almacenaje..."
-            className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
+            placeholder="Ej: Sofá rinconero cómodo de 3 plazas, mesa de comedor para 6 personas, mueble TV con almacenaje y zona de lectura iluminada..."
+            className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-indigo-500 shadow-2xs"
           />
         </div>
 
         {/* Sugerencias rápidas */}
         <div>
-          <span className="text-[10px] text-slate-400 font-semibold block mb-1">Sugerencias habituales:</span>
+          <span className="text-[10px] text-slate-400 font-semibold block mb-1">Elementos habituales:</span>
           <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
             {SUGGESTION_CHIPS.map((chip) => (
               <button
                 key={chip}
                 type="button"
                 onClick={() => addChip(chip)}
-                className="px-2 py-0.5 bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 rounded-full text-[10px] text-slate-600 transition"
+                className="px-2 py-0.5 bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 rounded-full text-[10px] text-slate-600 transition shadow-2xs"
               >
                 + {chip}
               </button>
@@ -262,11 +245,11 @@ export function DesignPanel({
         {/* Estilo y Presupuesto */}
         <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/60">
           <div>
-            <label className="text-[11px] text-slate-500 block mb-1 font-medium">Estilo decorativo</label>
+            <label className="text-[11px] text-slate-600 block mb-1 font-bold">Estilo decorativo</label>
             <select
               value={data.style}
               onChange={(e) => update((d) => ({ ...d, style: e.target.value }))}
-              className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700"
+              className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs cursor-pointer"
             >
               {STYLES.map((s) => (
                 <option key={s} value={s}>
@@ -277,14 +260,44 @@ export function DesignPanel({
           </div>
 
           <div>
-            <label className="text-[11px] text-slate-500 block mb-1 font-medium">Presupuesto orientativo</label>
+            <label className="text-[11px] text-slate-600 block mb-1 font-bold">Presupuesto orientativo</label>
             <input
               type="text"
               placeholder="Ej: 2.500 €"
               value={data.budget}
               onChange={(e) => update((d) => ({ ...d, budget: e.target.value }))}
-              className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700"
+              className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs"
             />
+          </div>
+        </div>
+
+        {/* Selector de cantidad de propuestas (de 1 a 10) */}
+        <div className="pt-2 border-t border-slate-200/60 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] text-slate-700 font-bold flex items-center gap-1">
+              <LayoutGrid className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Número de propuestas a generar (1 a 10):</span>
+            </label>
+            <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 font-extrabold rounded-md text-xs">
+              {proposalCount} {proposalCount === 1 ? "idea" : "ideas"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1 overflow-x-auto py-1">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setProposalCount(n)}
+                className={`w-7 h-7 rounded-lg text-xs font-bold transition flex items-center justify-center shrink-0 ${
+                  proposalCount === n
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -293,17 +306,21 @@ export function DesignPanel({
           type="button"
           disabled={loadingProposals}
           onClick={generateProposals}
-          className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
+          className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-xs rounded-xl shadow-md transition"
         >
           {loadingProposals ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Diseñando con IA...</span>
+              <span>Diseñando {proposalCount} propuestas con IA...</span>
             </>
           ) : (
             <>
               <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>{data.proposals.length ? "Regenerar Propuestas" : "Generar Propuestas con IA"}</span>
+              <span>
+                {data.proposals.length > 0
+                  ? `Regenerar ${proposalCount} Propuestas con IA`
+                  : `Generar ${proposalCount} Propuestas de Diseño`}
+              </span>
             </>
           )}
         </button>
@@ -312,16 +329,16 @@ export function DesignPanel({
       {/* Propuestas devueltas */}
       {data.proposals.length > 0 && (
         <div className="flex flex-col gap-3">
-          {/* Pestañas de propuestas */}
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+          {/* Barra de pestañas con scroll horizontal para todas las propuestas */}
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl overflow-x-auto">
             {data.proposals.map((p, idx) => (
               <button
                 key={p.id}
                 type="button"
                 onClick={() => update((d) => ({ ...d, activeProposalId: p.id }))}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   p.id === activeProposal?.id
-                    ? "bg-white text-indigo-600 shadow-sm"
+                    ? "bg-white text-indigo-600 shadow-xs"
                     : "text-slate-500 hover:text-slate-800"
                 }`}
               >
@@ -332,27 +349,28 @@ export function DesignPanel({
 
           {/* Tarjeta de la propuesta activa */}
           {activeProposal && (
-            <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-3 text-xs shadow-sm">
+            <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3.5 text-xs shadow-sm">
+              {/* Cabecera y resumen */}
               <div>
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-slate-800 text-sm">{activeProposal.title}</h4>
-                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 font-semibold rounded-full text-[10px]">
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="font-extrabold text-slate-800 text-sm leading-tight">{activeProposal.title}</h4>
+                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 font-bold rounded-full text-[10px] shrink-0">
                     {activeProposal.style}
                   </span>
                 </div>
-                <p className="text-slate-600 text-xs mt-1 leading-relaxed">{activeProposal.summary}</p>
+                <p className="text-slate-600 text-xs mt-1.5 leading-relaxed">{activeProposal.summary}</p>
               </div>
 
               {/* Paleta de colores */}
               {activeProposal.palette?.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <Palette className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-[11px] text-slate-400 font-semibold">Paleta:</span>
-                  <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                  <Palette className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                  <span className="text-[11px] text-slate-500 font-bold">Paleta de estilo:</span>
+                  <div className="flex items-center gap-1.5 ml-auto">
                     {activeProposal.palette.map((color, i) => (
                       <div
                         key={i}
-                        className="w-4 h-4 rounded-full border border-black/10 shadow-xs"
+                        className="w-5 h-5 rounded-full border border-black/10 shadow-xs cursor-pointer hover:scale-110 transition"
                         style={{ backgroundColor: color }}
                         title={color}
                       />
@@ -361,35 +379,35 @@ export function DesignPanel({
                 </div>
               )}
 
-              {/* Tips de interiorismo */}
+              {/* Tips de interiorismo y zonificación */}
               {activeProposal.tips?.length > 0 && (
-                <div className="bg-amber-50/70 border border-amber-200/70 rounded-lg p-2 space-y-1">
-                  <span className="font-semibold text-amber-900 flex items-center gap-1 text-[11px]">
-                    <Lightbulb className="w-3 h-3 text-amber-600" />
-                    <span>Consejos de distribución:</span>
+                <div className="bg-amber-50/80 border border-amber-200/80 rounded-xl p-2.5 space-y-1.5">
+                  <span className="font-bold text-amber-950 flex items-center gap-1.5 text-[11px]">
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Claves de distribución del interiorista:</span>
                   </span>
-                  <ul className="list-disc list-inside text-[10px] text-amber-800 space-y-0.5">
-                    {activeProposal.tips.slice(0, 2).map((tip, i) => (
+                  <ul className="list-disc list-inside text-[11px] text-amber-900 space-y-1 leading-relaxed">
+                    {activeProposal.tips.map((tip, i) => (
                       <li key={i}>{tip}</li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              {/* Generar render fotorrealista */}
-              <div className="pt-2 border-t border-slate-100 space-y-2">
+              {/* Renders 3D fotorrealistas */}
+              <div className="pt-2 border-t border-slate-100 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-700 text-xs flex items-center gap-1.5">
+                  <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
                     <ImageIcon className="w-4 h-4 text-indigo-600" />
-                    <span>Renders 3D fotorrealistas</span>
+                    <span>Visualización / Render 3D</span>
                   </span>
                   <select
                     value={renderView}
                     onChange={(e) => setRenderView(e.target.value as any)}
-                    className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-md text-[11px] font-medium text-slate-700"
+                    className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-md text-[11px] font-semibold text-slate-700 cursor-pointer"
                   >
-                    <option value="perspective">Perspectiva (Ojos)</option>
-                    <option value="aerial">Vista Aérea 3D</option>
+                    <option value="perspective">Perspectiva Humana</option>
+                    <option value="aerial">Vista Aérea Isométrica</option>
                   </select>
                 </div>
 
@@ -397,16 +415,16 @@ export function DesignPanel({
                   type="button"
                   disabled={loadingRender}
                   onClick={generateRender}
-                  className="w-full flex items-center justify-center gap-2 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-bold text-xs rounded-xl transition"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-indigo-50 to-violet-50 hover:from-indigo-100 hover:to-violet-100 border border-indigo-200 text-indigo-700 font-bold text-xs rounded-xl transition shadow-2xs"
                 >
                   {loadingRender ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Generando render fotorrealista...</span>
+                      <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                      <span>Generando render fotorrealista con IA...</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                      <Sparkles className="w-4 h-4 text-indigo-600" />
                       <span>Generar Render de esta Idea</span>
                     </>
                   )}
@@ -419,11 +437,12 @@ export function DesignPanel({
                       <div
                         key={i}
                         onClick={() => setSelectedRenderUrl(url)}
-                        className="group relative rounded-lg overflow-hidden border border-slate-200 aspect-video cursor-pointer hover:shadow-md transition"
+                        className="group relative rounded-xl overflow-hidden border border-slate-200 aspect-video cursor-pointer hover:shadow-md transition bg-slate-900"
                       >
                         <img src={url} alt={`Render ${i + 1}`} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition text-white">
                           <Eye className="w-4 h-4" />
+                          <span className="text-[10px] font-bold">Ver Ampliado</span>
                         </div>
                       </div>
                     ))}
@@ -431,25 +450,81 @@ export function DesignPanel({
                 )}
               </div>
 
+              {/* LEYENDA Y LISTA DE ELEMENTOS DISTRIBUIDOS */}
+              <div className="pt-2 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                    <ListFilter className="w-4 h-4 text-indigo-600" />
+                    <span>Elementos y Mobiliario del Plano ({activeProposal.items.length})</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400">Haz clic para seleccionar</span>
+                </div>
+
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {activeProposal.items.map((item) => {
+                    const isSelected = sel?.type === "furn" && sel.id === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => setSel({ type: "furn", id: item.id })}
+                        className={`p-2 rounded-xl border text-xs cursor-pointer transition flex items-start justify-between gap-2 ${
+                          isSelected
+                            ? "border-indigo-500 bg-indigo-50/60 shadow-xs"
+                            : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <div
+                            className="w-3.5 h-3.5 rounded-full mt-0.5 shrink-0 border border-black/10"
+                            style={{ backgroundColor: item.color || "#64748b" }}
+                          />
+                          <div>
+                            <span className="font-bold text-slate-800 block">{item.name}</span>
+                            <span className="text-[10px] text-slate-500 block">
+                              {Math.round(item.w)} × {Math.round(item.d)} cm {item.material ? `· ${item.material}` : ""}
+                            </span>
+                            {item.notes && <span className="text-[10px] text-indigo-600 italic block">{item.notes}</span>}
+                          </div>
+                        </div>
+
+                        {isSelected && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteFurniture(item.id);
+                            }}
+                            className="text-rose-500 hover:text-rose-700 p-1"
+                            title="Eliminar elemento"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Refinar con feedback */}
               <div className="pt-2 border-t border-slate-100 space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-600 block">
-                  ¿Quieres cambiar algo de esta propuesta?
+                <label className="text-[11px] font-bold text-slate-700 block">
+                  ¿Quieres sugerir cambios o adaptar esta propuesta?
                 </label>
                 <div className="flex gap-1.5">
                   <input
                     type="text"
                     value={refineText}
                     onChange={(e) => setRefineText(e.target.value)}
-                    placeholder="Ej: Pon una mesa redonda, mueve el sofá a la derecha..."
-                    className="flex-1 px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:border-indigo-500"
+                    placeholder="Ej: Mueve el sofá hacia la izquierda, pon una mesa redonda de roble..."
+                    className="flex-1 px-2.5 py-2 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:border-indigo-500 shadow-2xs"
                     onKeyDown={(e) => e.key === "Enter" && refineProposal()}
                   />
                   <button
                     type="button"
                     disabled={loadingRefine || !refineText.trim()}
                     onClick={refineProposal}
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition"
+                    className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition shadow-xs"
                   >
                     {loadingRefine ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                   </button>
@@ -458,7 +533,7 @@ export function DesignPanel({
 
               {/* Mueble seleccionado en el plano */}
               {selectedFurniture && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2 text-xs">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2.5 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800">{selectedFurniture.name}</span>
                     <button
@@ -472,7 +547,7 @@ export function DesignPanel({
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <span className="text-[10px] text-slate-400 block">Ancho</span>
+                      <span className="text-[10px] text-slate-400 block font-medium">Ancho (cm)</span>
                       <input
                         type="number"
                         value={selectedFurniture.w}
@@ -481,7 +556,7 @@ export function DesignPanel({
                       />
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 block">Fondo</span>
+                      <span className="text-[10px] text-slate-400 block font-medium">Fondo (cm)</span>
                       <input
                         type="number"
                         value={selectedFurniture.d}
@@ -493,7 +568,7 @@ export function DesignPanel({
                   <button
                     type="button"
                     onClick={() => updateFurniture(selectedFurniture.id, { rot: (selectedFurniture.rot + 90) % 360 })}
-                    className="w-full py-1 bg-white border border-slate-200 rounded text-slate-700 font-semibold flex items-center justify-center gap-1"
+                    className="w-full py-1.5 bg-white border border-slate-200 rounded-lg text-slate-700 font-semibold flex items-center justify-center gap-1 hover:bg-slate-100 transition"
                   >
                     <RotateCw className="w-3 h-3 text-indigo-600" />
                     <span>Girar 90° ({selectedFurniture.rot}°)</span>
@@ -505,7 +580,7 @@ export function DesignPanel({
         </div>
       )}
 
-      {/* Modal de Render en grande */}
+      {/* Modal de Render en alta resolución */}
       {selectedRenderUrl && (
         <div
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
@@ -514,15 +589,15 @@ export function DesignPanel({
           <div className="relative max-w-4xl w-full bg-slate-900 rounded-2xl overflow-hidden p-2 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <img src={selectedRenderUrl} alt="Render IA" className="w-full h-auto max-h-[80vh] object-contain rounded-xl" />
             <div className="flex items-center justify-between p-3 text-white">
-              <span className="text-xs text-slate-300">Render fotorrealista generado con Gemini</span>
+              <span className="text-xs text-slate-300">Render de interiorismo fotorrealista generado con Gemini</span>
               <div className="flex items-center gap-2">
                 <a
                   href={selectedRenderUrl}
-                  download="render-interiorismo.jpg"
+                  download="render-interiorismo-roomia.jpg"
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Descargar</span>
+                  <span>Descargar Render</span>
                 </a>
                 <button
                   type="button"

@@ -10,16 +10,16 @@ export const dynamic = "force-dynamic";
 const itemSchema = {
   type: "object",
   properties: {
-    name: { type: "string", description: "Nombre del mueble/objeto en español" },
+    name: { type: "string", description: "Nombre específico y descriptivo del mueble/objeto en español (ej: Sofá rinconero 3 plazas, Mesa comedor roble para 6, etc.)" },
     category: { type: "string", enum: FURNITURE_CATEGORIES },
-    x: { type: "number", description: "Centro X en cm" },
-    y: { type: "number", description: "Centro Y en cm" },
-    width: { type: "number", description: "Ancho en cm (lado frontal)" },
+    x: { type: "number", description: "Posición centro X en cm en el plano" },
+    y: { type: "number", description: "Posición centro Y en cm en el plano" },
+    width: { type: "number", description: "Ancho frontal en cm (medidas reales estándar de mercado)" },
     depth: { type: "number", description: "Fondo en cm" },
-    rotation: { type: "number", description: "0, 90, 180 o 270" },
-    color: { type: "string", description: "Color principal en hex #RRGGBB" },
-    material: { type: "string" },
-    notes: { type: "string" },
+    rotation: { type: "number", description: "Ángulo de orientación: 0 (frente mira hacia abajo +Y), 90 (mira hacia izquierda -X), 180 (mira hacia arriba -Y), 270 (mira hacia derecha +X)" },
+    color: { type: "string", description: "Color representativo en formato hex #RRGGBB acorde a la paleta del estilo" },
+    material: { type: "string", description: "Material y acabado realista (ej: Roble macizo aceitado, Lino natural beige, Metal negro mate, Cuero cognac)" },
+    notes: { type: "string", description: "Función o motivo de su ubicación en la distribución" },
   },
   required: ["name", "category", "x", "y", "width", "depth", "rotation", "color"],
 };
@@ -27,28 +27,42 @@ const itemSchema = {
 const proposalSchema = {
   type: "object",
   properties: {
-    title: { type: "string" },
-    summary: { type: "string", description: "2-4 frases explicando la distribución" },
+    title: { type: "string", description: "Título inspirador y profesional de la propuesta (ej: 'Concepto Abierto Japandi & Luz Natural', 'Salón Nórdico con Zona de Lectura', etc.)" },
+    summary: { type: "string", description: "Explicación detallada de la distribución espacial, zonificación, optimización de circulaciones y armonía decorativa (3-5 frases estructuradas)." },
     style: { type: "string" },
-    palette: { type: "array", items: { type: "string" }, description: "3-5 colores hex" },
-    estimated_budget_eur: { type: "number" },
+    palette: { type: "array", items: { type: "string" }, description: "4-5 códigos de color hex armónicos con el estilo elegido" },
+    estimated_budget_eur: { type: "number", description: "Estimación económica aproximada de la propuesta" },
     items: { type: "array", items: itemSchema },
-    tips: { type: "array", items: { type: "string" } },
+    tips: { type: "array", items: { type: "string" }, description: "3-4 consejos clave de interiorista profesional para maximizar el confort y la estética de esta distribución" },
   },
   required: ["title", "summary", "style", "palette", "items", "tips"],
 };
 
-const SYSTEM = `Eres un interiorista profesional y experto en distribución de espacios.
-Trabajas sobre un plano en planta con coordenadas en centímetros (X hacia la derecha, Y hacia abajo).
-Reglas de colocación OBLIGATORIAS:
-- Todos los muebles deben quedar completamente DENTRO del contorno (outline_polygon) y sin solaparse entre sí ni con los elementos fijos.
-- "rotation" indica hacia dónde mira el FRENTE del mueble: 0 = la parte trasera (respaldo, cabecero) queda arriba (norte, -Y) y el frente mira hacia +Y; 90 = trasera a la derecha (este)... sigue en sentido horario. Un sofá pegado a la pared superior tiene rotation 0; pegado a la pared izquierda, rotation 270.
-- "width" es la medida del lado frontal y "depth" el fondo, en cm, con medidas reales de mercado.
-- Respeta el barrido de las puertas (deja libre un cuadrado de su ancho delante), no tapes ventanas con muebles altos, no tapes radiadores, chimeneas ni armarios.
-- Deja pasos de 70-90 cm. Coloca la TV frente al sofá y evita reflejos de ventanas cuando sea posible.
-- Usa los enchufes y tomas de TV existentes como referencia para electrónica.
-- Incluye TODOS los elementos que pide el usuario y puedes añadir complementos (alfombra, lámparas, plantas) si encajan.
-Responde siempre en español.`;
+const SYSTEM = `Eres un ARQUITECTO DE INTERIORES y DISEÑADOR DE ESPACIOS de élite.
+Tu misión es diseñar distribuciones en planta y propuestas de interiorismo magistrales, funcionales, ergonómicas y visualmente impactantes.
+
+SISTEMA DE COORDENADAS:
+- Plano 2D en centímetros (cm).
+- Eje X hacia la derecha (Este).
+- Eje Y hacia abajo (Sur).
+
+REGLAS DE ORO DE ARQUITECTURA Y ERGONOMÍA (OBLIGATORIAS):
+1. ZONIFICACIÓN Y CIRCULACIÓN:
+   - Mantén pasillos de paso despejados de al menos 70 a 90 cm de anchura entre muebles y paredes.
+   - Respeta escrupulosamente el barrido de apertura de todas las puertas (deja un área libre de su ancho).
+   - Respeta el acceso a ventanas y balcones: nunca coloques muebles altos que tapen la luz o impidan la apertura.
+   - Respeta los radiadores, chimeneas, armarios empotrados y tomas eléctricas/TV existentes.
+2. DISPOSICIÓN Y ORIENTACIÓN DEL MOBILIARIO:
+   - "rotation" define hacia dónde mira el frente del mueble (0 = frente hacia abajo +Y, respaldo arriba; 90 = frente hacia la izquierda -X; 180 = frente hacia arriba -Y; 270 = frente hacia la derecha +X).
+   - La zona de TV debe orientarse hacia el sofá principal respetando la distancia visual adecuada y evitando reflejos directos de ventanas.
+   - En dormitorios: la cama debe permitir paso cómodo a ambos lados (al menos 50-60 cm) si es de matrimonio.
+3. DOMINIO ABSOLUTO DE ESTILOS DECORATIVOS:
+   - Aplica con rigor los materiales, paletas cromáticas y tipología de piezas según el estilo seleccionado (Nórdico, Japandi, Minimalista, Moderno, Industrial, Mediterráneo, Boho, Clásico, Mid-Century, etc.).
+4. DIVERSIDAD ENTRE PROPUESTAS:
+   - Si se generan varias propuestas, cada una DEBE ofrecer una distribución espacial CLARAMENTE DISTINTA (por ejemplo: opción 1 con sofá rinconero y zona de lectura, opción 2 con distribución simétrica de dos sofás, opción 3 con énfasis en comedor amplio o espacio de trabajo integrado).
+5. TODOS LOS MUEBLES DEBEN QUEDAR DENTRO DEL CONTORNO DE LA HABITACIÓN.
+
+Responde siempre en español profesional.`;
 
 export async function POST(req: Request) {
   if (!hasAi()) return noAiResponse();
@@ -64,8 +78,15 @@ export async function POST(req: Request) {
       feedback?: string;
       count?: number;
     };
+
     const room = describeRoom(body.data, body.roomType);
-    const base = `ESTANCIA:\n${JSON.stringify(room)}\n\nLO QUE QUIERE EL USUARIO:\n${body.brief || "(sin especificar, propone lo típico para este tipo de estancia)"}\nEstilo preferido: ${body.style}\nPresupuesto: ${body.budget || "no indicado"}`;
+    const base = `ESTANCIA Y ARQUITECTURA:
+${JSON.stringify(room)}
+
+DESEOS DEL CLIENTE:
+${body.brief || "(Optimizar al máximo el espacio con el mobiliario idóneo para esta tipología de estancia)"}
+Estilo decorativo: ${body.style || "Nórdico"}
+Presupuesto orientativo: ${body.budget || "No indicado"}`;
 
     type RawProposal = {
       title: string;
@@ -86,27 +107,28 @@ export async function POST(req: Request) {
           : "other",
         x: Number(it.x) || 0,
         y: Number(it.y) || 0,
-        w: Math.max(5, Number(it.width) || 50),
-        d: Math.max(5, Number(it.depth) || 50),
+        w: Math.max(10, Number(it.width) || 60),
+        d: Math.max(10, Number(it.depth) || 60),
         rot: Math.round((Number(it.rotation) || 0) / 90) * 90,
-        color: it.color,
+        color: it.color || "#64748b",
         material: it.material,
         notes: it.notes,
       }));
       return {
         id: prev?.id || uid(),
-        title: p.title,
-        summary: p.summary,
-        style: p.style,
-        palette: p.palette || [],
+        title: p.title || `Distribución ${body.style}`,
+        summary: p.summary || "",
+        style: p.style || body.style,
+        palette: p.palette || ["#f8fafc", "#e2e8f0", "#94a3b8", "#475569"],
         estimatedBudget: p.estimated_budget_eur,
         items: sanitizeItems(items, body.data),
         tips: p.tips || [],
-        renders: [],
+        renders: prev?.renders || [],
         feedbackHistory: prev ? [...(prev.feedbackHistory || []), body.feedback || ""] : [],
       };
     };
 
+    // Modo refinamiento con feedback
     if (body.mode === "refine" && body.proposal) {
       const current = {
         title: body.proposal.title,
@@ -115,28 +137,77 @@ export async function POST(req: Request) {
         palette: body.proposal.palette,
         items: body.proposal.items.map((i) => ({
           name: i.name, category: i.category, x: Math.round(i.x), y: Math.round(i.y),
-          width: i.w, depth: i.d, rotation: i.rot, color: i.color, material: i.material,
+          width: i.w, depth: i.d, rotation: i.rot, color: i.color, material: i.material, notes: i.notes,
         })),
       };
       const p = await generateJson<RawProposal>({
         system: SYSTEM,
-        input: `${base}\n\nPROPUESTA ACTUAL (puede incluir ajustes manuales del usuario, respétalos salvo que pida lo contrario):\n${JSON.stringify(current)}\n\nCAMBIOS QUE PIDE EL USUARIO:\n${body.feedback}\n\nDevuelve la propuesta revisada completa aplicando los cambios.`,
+        input: `${base}
+
+PROPUESTA ACTUAL (con ajustes existentes):
+${JSON.stringify(current)}
+
+CAMBIOS Y SUGERENCIAS DEL CLIENTE:
+${body.feedback}
+
+Aplica con maestría las sugerencias del cliente y devuelve la propuesta completa optimizada y cohesionada.`,
         schema: proposalSchema,
       });
       return Response.json({ proposal: toProposal(p, body.proposal) });
     }
 
-    const count = Math.min(4, Math.max(1, body.count || 3));
-    const res = await generateJson<{ proposals: RawProposal[] }>({
-      system: SYSTEM,
-      input: `${base}\n\nGenera ${count} propuestas de distribución CLARAMENTE DIFERENTES entre sí (distinta organización del espacio y matices de estilo).`,
-      schema: {
-        type: "object",
-        properties: { proposals: { type: "array", items: proposalSchema } },
-        required: ["proposals"],
-      },
-    });
-    return Response.json({ proposals: (res.proposals || []).map((p) => toProposal(p)) });
+    // Cantidad de propuestas seleccionada (de 1 a 10)
+    const targetCount = Math.min(10, Math.max(1, body.count || 3));
+
+    // Si son más de 4 propuestas, generamos en 2 lotes paralelos para máxima velocidad y evitar cortes
+    let rawProposals: RawProposal[] = [];
+
+    if (targetCount <= 4) {
+      const res = await generateJson<{ proposals: RawProposal[] }>({
+        system: SYSTEM,
+        input: `${base}
+
+Genera exactamente ${targetCount} propuestas de distribución y diseño de interiores CLARAMENTE DIFERENTES entre sí. Cada propuesta debe explorar una solución de organización del espacio, mobiliario y zonificación única.`,
+        schema: {
+          type: "object",
+          properties: { proposals: { type: "array", items: proposalSchema } },
+          required: ["proposals"],
+        },
+      });
+      rawProposals = res.proposals || [];
+    } else {
+      const batch1Count = Math.ceil(targetCount / 2);
+      const batch2Count = targetCount - batch1Count;
+
+      const [res1, res2] = await Promise.all([
+        generateJson<{ proposals: RawProposal[] }>({
+          system: SYSTEM,
+          input: `${base}
+
+Genera ${batch1Count} propuestas de interiorismo creativas y funcionales (Enfoques de distribución A: optimización de espacio y confort).`,
+          schema: {
+            type: "object",
+            properties: { proposals: { type: "array", items: proposalSchema } },
+            required: ["proposals"],
+          },
+        }),
+        generateJson<{ proposals: RawProposal[] }>({
+          system: SYSTEM,
+          input: `${base}
+
+Genera ${batch2Count} propuestas de interiorismo alternativas e innovadoras (Enfoques de distribución B: variantes de zonificación, orientación y mobiliario multifuncional).`,
+          schema: {
+            type: "object",
+            properties: { proposals: { type: "array", items: proposalSchema } },
+            required: ["proposals"],
+          },
+        }),
+      ]);
+
+      rawProposals = [...(res1.proposals || []), ...(res2.proposals || [])];
+    }
+
+    return Response.json({ proposals: rawProposals.map((p) => toProposal(p)) });
   } catch (e) {
     return aiError(e);
   }
