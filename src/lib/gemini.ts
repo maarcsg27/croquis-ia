@@ -1,7 +1,16 @@
 import { GoogleGenAI } from "@google/genai";
 
-export const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || "gemini-3.8-flash";
-export const IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image";
+export const TEXT_MODELS = [
+  process.env.GEMINI_TEXT_MODEL || "gemini-3.8-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+];
+
+export const IMAGE_MODELS = [
+  process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image",
+  "gemini-3.1-flash-lite-image",
+  "gemini-3-pro-image",
+];
 
 export const hasAi = () => Boolean(process.env.GEMINI_API_KEY);
 
@@ -58,15 +67,29 @@ export async function generateJson<T>(opts: {
   tools?: any[];
   model?: string;
 }): Promise<T> {
-  const req: any = {
-    model: opts.model || TEXT_MODEL,
-    system_instruction: opts.system,
-    input: opts.input,
-    response_format: { type: "text", mime_type: "application/json", schema: opts.schema },
-  };
-  if (opts.tools) req.tools = opts.tools;
-  const it = (await ai().interactions.create(req)) as Interaction;
-  return parseJsonLoose<T>(textOf(it));
+  const modelsToTry = opts.model ? [opts.model, ...TEXT_MODELS.filter((m) => m !== opts.model)] : TEXT_MODELS;
+  let lastError: any = null;
+
+  for (const model of modelsToTry) {
+    try {
+      const req: any = {
+        model,
+        system_instruction: opts.system,
+        input: opts.input,
+        response_format: { type: "text", mime_type: "application/json", schema: opts.schema },
+      };
+      if (opts.tools) req.tools = opts.tools;
+      const it = (await ai().interactions.create(req)) as Interaction;
+      return parseJsonLoose<T>(textOf(it));
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[AI] Intento fallido con modelo ${model}:`, err.message || err);
+      // Si es un error 503 (alta demanda) o 429, probamos con el siguiente modelo de fallback
+      await new Promise((r) => setTimeout(r, 600));
+    }
+  }
+
+  throw lastError || new Error("No se pudo generar respuesta con ningún modelo de IA.");
 }
 
 export async function generateImage(opts: {
@@ -76,24 +99,37 @@ export async function generateImage(opts: {
 }): Promise<{ data: string; mime_type: string }> {
   const input: any[] = [{ type: "text", text: opts.prompt }];
   for (const im of opts.images || []) input.push({ type: "image", data: im.data, mime_type: im.mime_type });
-  const req: any = {
-    model: IMAGE_MODEL,
-    input,
-    response_modalities: ["image"],
-    response_format: {
-      type: "image",
-      mime_type: "image/jpeg",
-      aspect_ratio: opts.aspect_ratio || "16:9",
-      image_size: "1K",
-    },
-  };
-  const it = (await ai().interactions.create(req)) as Interaction;
-  let img = it.output_image;
-  if (!img?.data)
-    for (const s of it.steps || [])
-      if (s.type === "model_output") for (const c of s.content || []) if (c.type === "image" && c.data) img = c;
-  if (!img?.data) throw new Error("La IA no devolvió ninguna imagen: " + textOf(it).slice(0, 200));
-  return { data: img.data, mime_type: img.mime_type || "image/jpeg" };
+
+  let lastError: any = null;
+  for (const model of IMAGE_MODELS) {
+    try {
+      const req: any = {
+        model,
+        input,
+        response_modalities: ["image"],
+        response_format: {
+          type: "image",
+          mime_type: "image/jpeg",
+          aspect_ratio: opts.aspect_ratio || "16:9",
+          image_size: "1K",
+        },
+      };
+      const it = (await ai().interactions.create(req)) as Interaction;
+      let img = it.output_image;
+      if (!img?.data)
+        for (const s of it.steps || [])
+          if (s.type === "model_output") for (const c of s.content || []) if (c.type === "image" && c.data) img = c;
+      if (img?.data) {
+        return { data: img.data, mime_type: img.mime_type || "image/jpeg" };
+      }
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[AI] Intento de render fallido con ${model}:`, err.message || err);
+      await new Promise((r) => setTimeout(r, 600));
+    }
+  }
+
+  throw lastError || new Error("La IA no pudo generar ninguna imagen de render.");
 }
 
 export function aiError(e: unknown) {
